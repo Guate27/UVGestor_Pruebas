@@ -78,6 +78,7 @@ fun HomeScreen(
         onAddExpenseClick = { navController.navigate(Screen.AddExpense.route) },
         onAddIncomeClick = { navController.navigate(Screen.AddIncome.route) },
         onBudgetClick = { navController.navigate(Screen.Budget.route) },
+        onAdviceClick = { navController.navigate(Screen.FinancialAdvice.route) },
         onLogoutClick = {
             navController.navigate(Screen.AUTH_GRAPH_ROUTE) {
                 popUpTo(Screen.MAIN_GRAPH_ROUTE) {
@@ -109,6 +110,7 @@ fun HomeContent(
     onAddExpenseClick: () -> Unit,
     onAddIncomeClick: () -> Unit,
     onBudgetClick: () -> Unit,
+    onAdviceClick: () -> Unit,
     onLogoutClick: () -> Unit
 ) {
     val uvgGreen = Color(0xFF00C853)
@@ -168,32 +170,13 @@ fun HomeContent(
                 )
             )
         },
-        floatingActionButton = {
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                SmallFloatingActionButton(
-                    onClick = onAddIncomeClick,
-                    containerColor = Color(0xFF4CAF50),
-                    contentColor = Color.White
-                ) {
-                    Text("💰", fontSize = 20.sp)
-                }
-
-                FloatingActionButton(
-                    onClick = onAddExpenseClick,
-                    containerColor = uvgGreen,
-                    modifier = Modifier.size(64.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "Agregar",
-                        tint = Color.White,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-            }
+        bottomBar = {
+            BottomNavigationBar(
+                onAddIncomeClick = onAddIncomeClick,
+                onAddExpenseClick = onAddExpenseClick,
+                onAdviceClick = onAdviceClick,
+                primaryColor = uvgGreen
+            )
         },
         containerColor = backgroundColor
     ) { paddingValues ->
@@ -498,6 +481,95 @@ fun HomeContent(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun BottomNavigationBar(
+    onAddIncomeClick: () -> Unit,
+    onAddExpenseClick: () -> Unit,
+    onAdviceClick: () -> Unit,
+    primaryColor: Color
+) {
+    NavigationBar(
+        containerColor = Color.White,
+        contentColor = primaryColor,
+        tonalElevation = 8.dp
+    ) {
+        NavigationBarItem(
+            icon = {
+                Text(
+                    "💰",
+                    fontSize = 24.sp
+                )
+            },
+            label = {
+                Text(
+                    "Ingreso",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            },
+            selected = false,
+            onClick = onAddIncomeClick,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color.White,
+                selectedTextColor = primaryColor,
+                unselectedIconColor = primaryColor,
+                unselectedTextColor = Color.Gray,
+                indicatorColor = primaryColor
+            )
+        )
+
+        NavigationBarItem(
+            icon = {
+                Text(
+                    "💸",
+                    fontSize = 24.sp
+                )
+            },
+            label = {
+                Text(
+                    "Gasto",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            },
+            selected = false,
+            onClick = onAddExpenseClick,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color.White,
+                selectedTextColor = primaryColor,
+                unselectedIconColor = primaryColor,
+                unselectedTextColor = Color.Gray,
+                indicatorColor = primaryColor
+            )
+        )
+
+        NavigationBarItem(
+            icon = {
+                Text(
+                    "💡",
+                    fontSize = 24.sp
+                )
+            },
+            label = {
+                Text(
+                    "Consejos",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            },
+            selected = false,
+            onClick = onAdviceClick,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color.White,
+                selectedTextColor = primaryColor,
+                unselectedIconColor = primaryColor,
+                unselectedTextColor = Color.Gray,
+                indicatorColor = primaryColor
+            )
+        )
     }
 }
 

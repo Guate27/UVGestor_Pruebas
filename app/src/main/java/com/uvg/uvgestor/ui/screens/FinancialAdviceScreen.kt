@@ -1,236 +1,399 @@
-/*package com.uvg.uvgestor.ui.screens
+package com.uvg.uvgestor.ui.screens
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import com.uvg.uvgestor.navigation.Screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.uvg.uvgestor.presentation.viewmodel.advice.FinancialAdviceUiEvent
+import com.uvg.uvgestor.presentation.viewmodel.advice.FinancialAdviceViewModel
+import com.uvg.uvgestor.ui.data.FinancialAdvice
+
+@Composable
+fun FinancialAdviceScreen(
+    navController: NavHostController,
+    viewModel: FinancialAdviceViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    FinancialAdviceContent(
+        adviceList = uiState.filteredAdviceList,
+        selectedCategory = uiState.selectedCategory,
+        searchQuery = uiState.searchQuery,
+        isLoading = uiState.isLoading,
+        error = uiState.error,
+        onSearchQueryChange = { viewModel.onEvent(FinancialAdviceUiEvent.SearchQueryChanged(it)) },
+        onCategorySelected = { viewModel.onEvent(FinancialAdviceUiEvent.CategorySelected(it)) },
+        onErrorDismiss = { viewModel.onEvent(FinancialAdviceUiEvent.ErrorDismissed) },
+        onRetryClick = { viewModel.onEvent(FinancialAdviceUiEvent.RetryLoad) },
+        onBackClick = { navController.popBackStack() }
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FinancialAdviceScreen(navController: NavController) {
-    var searchQuery by remember { mutableStateOf("") }
-    
-    // Colores del tema
+fun FinancialAdviceContent(
+    adviceList: List<FinancialAdvice>,
+    selectedCategory: String?,
+    searchQuery: String,
+    isLoading: Boolean,
+    error: String?,
+    onSearchQueryChange: (String) -> Unit,
+    onCategorySelected: (String?) -> Unit,
+    onErrorDismiss: () -> Unit,
+    onRetryClick: () -> Unit,
+    onBackClick: () -> Unit
+) {
     val backgroundColor = Color(0xFFF8FCF8)
-    val primaryGreen = Color(0xFF479E47)
+    val primaryGreen = Color(0xFF00C853)
     val lightGreen = Color(0xFFE6F4E6)
     val darkText = Color(0xFF0D1C0D)
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         "Consejos Financieros",
-                        modifier = Modifier.fillMaxWidth(),
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
-                        ),
-                        color = darkText
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = onBackClick) {
                         Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = darkText
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver"
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = backgroundColor
+                    containerColor = primaryGreen,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
             )
-        },
-        bottomBar = {
-            NavigationBar(
-                containerColor = backgroundColor,
-                contentColor = primaryGreen
-            ) {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
-                    label = { Text("Inicio", fontSize = 12.sp) },
-                    selected = false,
-                    onClick = { navController.navigate(Screen.Home.route) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = primaryGreen,
-                        selectedTextColor = primaryGreen,
-                        unselectedIconColor = primaryGreen,
-                        unselectedTextColor = primaryGreen,
-                        indicatorColor = lightGreen
-                    )
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Add, contentDescription = "Agregar") },
-                    label = { Text("+", fontSize = 12.sp) },
-                    selected = false,
-                    onClick = { navController.navigate(Screen.AddExpense.route) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = primaryGreen,
-                        selectedTextColor = primaryGreen,
-                        unselectedIconColor = primaryGreen,
-                        unselectedTextColor = primaryGreen,
-                        indicatorColor = lightGreen
-                    )
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Settings, contentDescription = "Ajustes") },
-                    label = { Text("Ajustes", fontSize = 12.sp) },
-                    selected = true,
-                    onClick = { /* Ya estamos aquí */ },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = darkText,
-                        selectedTextColor = darkText,
-                        unselectedIconColor = primaryGreen,
-                        unselectedTextColor = primaryGreen,
-                        indicatorColor = lightGreen
-                    )
-                )
-            }
         },
         containerColor = backgroundColor
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
         ) {
-            // Barra de búsqueda
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                placeholder = {
-                    Text(
-                        "¿Qué tipo de consejo buscas?",
-                        color = primaryGreen
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Search,
-                        contentDescription = "Buscar",
-                        tint = primaryGreen
-                    )
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = lightGreen,
-                    unfocusedContainerColor = lightGreen,
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                    cursorColor = primaryGreen
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-            
-            // Filtros
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                FilterChip("Gastos", lightGreen, darkText)
-                FilterChip("Ahorro", lightGreen, darkText)
-                FilterChip("Inversión", lightGreen, darkText)
-            }
-            
-            // Título y descripción
-            Text(
-                text = "¿Por qué es importante tu salud financiera?",
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                ),
-                color = darkText,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
-            )
-            
-            Text(
-                text = "Una buena administración financiera universitaria es crucial porque reduce el estrés, te permite concentrarte en tus estudios y evita deudas peligrosas. Por eso dejamos ésta parte para tus dudas, problemas o lo que sea que necesites.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = darkText,
-                lineHeight = 22.sp,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Imagen ilustrativa (placeholder)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .aspectRatio(2f / 3f)
-                    .background(
-                        color = Color(0xFFE8D5C4),
-                        shape = RoundedCornerShape(12.dp)
+                // Barra de búsqueda
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    placeholder = {
+                        Text(
+                            "¿Qué tipo de consejo buscas?",
+                            color = Color(0xFF666666)
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = "Buscar",
+                            tint = primaryGreen
+                        )
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedBorderColor = primaryGreen,
+                        unfocusedBorderColor = Color(0xFFE0E0E0),
+                        cursorColor = primaryGreen
                     ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "Imagen ilustrativa",
-                    color = Color.Gray,
-                    fontSize = 14.sp
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
                 )
+
+                // Filtros de categoría
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CategoryFilterChip(
+                        label = "Todos",
+                        selected = selectedCategory == null,
+                        onClick = { onCategorySelected(null) },
+                        primaryColor = primaryGreen
+                    )
+                    CategoryFilterChip(
+                        label = "Gastos",
+                        selected = selectedCategory == "Gastos",
+                        onClick = { onCategorySelected("Gastos") },
+                        primaryColor = primaryGreen
+                    )
+                    CategoryFilterChip(
+                        label = "Ahorro",
+                        selected = selectedCategory == "Ahorro",
+                        onClick = { onCategorySelected("Ahorro") },
+                        primaryColor = primaryGreen
+                    )
+                    CategoryFilterChip(
+                        label = "Inversión",
+                        selected = selectedCategory == "Inversión",
+                        onClick = { onCategorySelected("Inversión") },
+                        primaryColor = primaryGreen
+                    )
+                }
+
+                Divider(color = Color(0xFFE0E0E0), modifier = Modifier.padding(vertical = 8.dp))
+
+                // Contenido principal
+                if (isLoading) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            CircularProgressIndicator(color = primaryGreen)
+                            Text(
+                                "Cargando consejos...",
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                } else if (adviceList.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.padding(32.dp)
+                        ) {
+                            Text(
+                                "🔍",
+                                fontSize = 64.sp
+                            )
+                            Text(
+                                "No se encontraron consejos",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = darkText
+                            )
+                            Text(
+                                "Intenta con otra búsqueda o categoría",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Header informativo
+                        item {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = lightGreen
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
+                                    Text(
+                                        "💡 ¿Por qué es importante tu salud financiera?",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = darkText
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        "Una buena administración financiera universitaria es crucial porque reduce el estrés, te permite concentrarte en tus estudios y evita deudas peligrosas.",
+                                        fontSize = 14.sp,
+                                        color = Color(0xFF333333),
+                                        lineHeight = 20.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        // Lista de consejos
+                        items(adviceList) { advice ->
+                            AdviceCard(
+                                advice = advice,
+                                primaryColor = primaryGreen
+                            )
+                        }
+
+                        // Espaciado final
+                        item {
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
+                }
             }
-            
-            Spacer(modifier = Modifier.height(80.dp))
+
+            // Error Snackbar
+            error?.let {
+                Card(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFFEBEE)
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            it,
+                            color = Color(0xFFD32F2F),
+                            fontSize = 14.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            TextButton(onClick = onErrorDismiss) {
+                                Text("Cerrar")
+                            }
+                            TextButton(onClick = onRetryClick) {
+                                Text("Reintentar")
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-fun FilterChip(text: String, backgroundColor: Color, textColor: Color) {
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = backgroundColor,
-        modifier = Modifier.height(32.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
+fun CategoryFilterChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    primaryColor: Color
+) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = {
             Text(
-                text = text,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = textColor
+                label,
+                fontSize = 13.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
             )
-            Icon(
-                Icons.Default.KeyboardArrowDown,
-                contentDescription = null,
-                tint = textColor,
-                modifier = Modifier.size(20.dp)
+        },
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = primaryColor,
+            selectedLabelColor = Color.White,
+            containerColor = Color.White,
+            labelColor = Color(0xFF666666)
+        ),
+        border = if (selected) {
+            null
+        } else {
+            FilterChipDefaults.filterChipBorder(
+                enabled = true,
+                selected = false,
+                borderColor = Color(0xFFE0E0E0)
+            )
+        }
+    )
+}
+
+@Composable
+fun AdviceCard(
+    advice: FinancialAdvice,
+    primaryColor: Color
+) {
+    val categoryColor = when (advice.category) {
+        "Gastos" -> Color(0xFFFF6B6B)
+        "Ahorro" -> Color(0xFF4ECDC4)
+        "Inversión" -> Color(0xFFFFD93D)
+        else -> Color.Gray
+    }
+
+    val categoryEmoji = when (advice.category) {
+        "Gastos" -> "💸"
+        "Ahorro" -> "🐷"
+        "Inversión" -> "📈"
+        else -> "💡"
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    categoryEmoji,
+                    fontSize = 24.sp
+                )
+
+                Surface(
+                    color = categoryColor.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Text(
+                        advice.category,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = categoryColor
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                advice.text,
+                fontSize = 14.sp,
+                color = Color(0xFF333333),
+                lineHeight = 20.sp
             )
         }
     }
 }
-*/

@@ -12,6 +12,7 @@ import com.uvg.uvgestor.ui.screens.BudgetScreen
 import com.uvg.uvgestor.ui.screens.HomeScreen
 import com.uvg.uvgestor.ui.screens.TransactionDetailScreen
 import com.uvg.uvgestor.ui.screens.TransactionsScreen
+import com.uvg.uvgestor.ui.screens.FinancialAdviceScreen
 
 fun NavGraphBuilder.mainGraph(navController: NavHostController) {
     navigation(
@@ -36,6 +37,10 @@ fun NavGraphBuilder.mainGraph(navController: NavHostController) {
 
         composable(Screen.Transactions.route) {
             TransactionsScreen(navController = navController)
+        }
+
+        composable(Screen.FinancialAdvice.route) {
+            FinancialAdviceScreen(navController = navController)
         }
 
         composable(
